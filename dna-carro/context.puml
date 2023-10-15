@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+' uncomment the following line and comment the first to use locally
+' !include C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Sistema de agendamento de lavagem de carro
+
+Person(cliente, "Client do Aplicativo Dna-Carro", "Cliente do aplicativo.")
+System(dna_carro_system, "Sistema de agendamento de servicos automotivos", "Permite usuarios solicitarem servicos automotivos e listar seus agendamentos criar conta e resetar senha.")
+AddRelTag("async", $textColor=$ARROW_FONT_COLOR, $lineColor=$ARROW_COLOR, $lineStyle=DashedLine(), $legendText="async call")
+
+System_Ext(mail_system, "Sistema de email", "Serviço de email twilo.")
+System_Ext(storage_system, "Provedor de Arquivos", "Bucket que serve de storage para o google-cloud")
+System_Ext(sms_system, "Provedor de SMS", "Stores de iamgens servico do google")
+Rel(cliente, dna_carro_system, "Uses")
+Rel(dna_carro_system, mail_system, "envio de email para", "HTTP/JSON")
+Rel(dna_carro_system, sms_system, "envio de sms para", "HTTP/JSON")
+Rel(dna_carro_system, storage_system, "envio de imagens para", "Stream/buffer")
+Rel(dna_carro_system, storage_system, "acesso link publico", "HTTP/statico")
+Rel_Back(cliente, mail_system, "Envia email para","SMTP", $tags="async")
+Rel_Back(cliente, sms_system, "Envia sms para", "GSM", $tags="async")
+@enduml

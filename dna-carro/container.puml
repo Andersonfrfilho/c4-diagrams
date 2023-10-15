@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include DEVICONS/angular.puml
+!include DEVICONS/java.puml
+!include DEVICONS/nodejs.puml
+!include DEVICONS/react.puml
+!include DEVICONS/postgresql.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_WITH_LEGEND()
+AddRelTag("async", $textColor=$ARROW_FONT_COLOR, $lineColor=$ARROW_COLOR, $lineStyle=DashedLine(), $legendText="async call")
+
+Person(cliente, "Cliente", "Clientes do dna-carro", $sprite="users")
+Container(gateway, "Gateway", "Kong", "Gateway responsavel pela a segurance de acesso aos apps pelo o aplicativo")
+Container(mobile_app, "MobileApp", "React-native", "Aplicativo responsavel por cadastro, login e registro de agendamento", $sprite="react")
+Container(bff, "BFF", "nestjs/typescript", "Aplicação de formatação de dados para enviar as informações de telas", $sprite="nodejs")
+Container(api, "API", "nestjs/typescript", "Aplicação responsavel pela o buscas de contas de usuario, agendamentos e prover serviços", $sprite="nodejs")
+Container(worker, "WORKER", "nestjs/typescript", "Aplicação responsavel por gerenciar processos de upload de imagem, registros no banco", $sprite="nodejs")
+ContainerDb(db, "Database", "Postgres", "Banco de dados resposavel pelo o app dna-carro, contendo informações de usuarios, agendamentos e serviços", $sprite="postgresql")
+Container(queue, "Queue", "RabbitMq", "Servico de mensageria")
+
+System_Ext(storage_system, "Provedor de Arquivos", "Bucket que serve de storage para o google-cloud")
+
+Rel(cliente, mobile_app, "Uses", "interação")
+Rel(mobile_app, gateway, "Solicita serviço para", "https/json")
+Rel(gateway, bff, "Repassa request verificada para", "https/json")
+Rel(bff, api, "Solicita acao desejada", "https/json")
+Rel(api, worker, "Solicita acao desejada", "https/json")
+Rel(api, queue, "Envia mensagem para fila de upload de imagens","stream", $tags="async")
+Rel(worker, queue, "escuta a fila de upaload de iamgens","stream", $tags="async")
+Rel(worker,storage_system, "envia imagem para upload", "stream")
+Rel(worker,db, "grava o registro da imagem salva no bucket", "postgresql")
+@enduml
